@@ -1,0 +1,15 @@
+# 二进制文件
+dev-helper
+
+# 环境变量文件
+.env
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db 

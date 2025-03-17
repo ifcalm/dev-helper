@@ -1,0 +1,14 @@
+[Unit]
+Description=Dev Helper Service
+After=network.target
+
+[Service]
+Type=simple
+User=dev-helper
+WorkingDirectory=/opt/dev-helper
+ExecStart=/opt/dev-helper/dev-helper
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 
