@@ -2,6 +2,7 @@ package router
 
 import (
 	"dev-helper/pkg/controller/book"
+	"dev-helper/pkg/testcase"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +20,10 @@ func SetupRoutes() {
 
 	// 定义另一个路由
 	r.GET("/book/list", book.GetBook)
+
+	v1 := r.Group("/redis")
+	v1.POST("/string/set/:key/:value", testcase.SetString)
+	v1.GET("/string/get/:key", testcase.GetString)
 
 	// 启动服务器，监听本地8080端口
 	r.Run(":8080")
