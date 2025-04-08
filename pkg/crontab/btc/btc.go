@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/ripemd160"      // RIPEMD-160 哈希
 )
 
-func btc() {
+func Btc() string {
 	// 1. 生成 128 位熵（128位产生 12 个助记词）
 	entropy, err := bip39.NewEntropy(128)
 	if err != nil {
@@ -74,6 +74,8 @@ func btc() {
 		log.Fatal(err)
 	}
 	fmt.Println("比特币地址:", address)
+
+	return address
 }
 
 // publicKeyToAddress 根据公钥生成 P2PKH 类型的比特币地址
