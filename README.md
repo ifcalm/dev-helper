@@ -8,8 +8,8 @@
 
 ### 三方包
 
-1、redis操作使用 `github.com/redis/go-redis/v9` 包
-2、sql操作使用 `gorm.io/gorm` 包
+1、redis操作使用 `github.com/redis/go-redis/v9` 包  
+2、sql操作使用 `gorm.io/gorm` 包. gorm使用手册：https://gorm.io/zh_CN/docs/
 
 
 ### go-gin使用手册
