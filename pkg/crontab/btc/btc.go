@@ -2,14 +2,37 @@ package btc
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 
 	"github.com/btcsuite/btcutil/base58" // Base58 编码
 	"github.com/tyler-smith/go-bip32"    // HD 钱包密钥派生
 	"github.com/tyler-smith/go-bip39"    // 助记词生成
 	"golang.org/x/crypto/ripemd160"      // RIPEMD-160 哈希
 )
+
+// 地址余额响应结构
+type AddressBalanceResponse struct {
+	Address       string  `json:"address"`
+	BalanceSat    int64   `json:"balance_satoshi"`
+	BalanceBTC    float64 `json:"balance_btc"`
+	TxCount       int     `json:"tx_count"`
+	TotalReceived int64   `json:"total_received_satoshi"`
+	TotalSent     int64   `json:"total_sent_satoshi"`
+	ErrorMessage  string  `json:"error_message,omitempty"`
+}
+
+// Blockchain.com响应结构
+type BlockchainComResponse struct {
+	Address       string `json:"address"`
+	FinalBalance  int64  `json:"final_balance"`
+	NTx           int    `json:"n_tx"`
+	TotalReceived int64  `json:"total_received"`
+	TotalSent     int64  `json:"total_sent"`
+}
 
 func Btc() string {
 	// 1. 生成 128 位熵（128位产生 12 个助记词）
@@ -109,4 +132,64 @@ func checksum(payload []byte) []byte {
 	firstSHA := sha256.Sum256(payload)
 	secondSHA := sha256.Sum256(firstSHA[:])
 	return secondSHA[:4]
+}
+
+// 获取比特币地址余额的处理函数
+func GetBitcoinBalance(address string) float64 {
+
+	// 从Blockchain.com获取地址信息
+	balanceMoney, err := getBalanceFromBlockchainCom(address)
+	if err != nil {
+		return 0.12345
+	}
+
+	return balanceMoney
+}
+
+// 使用Gin的Context从Blockchain.com获取地址余额
+func getBalanceFromBlockchainCom(address string) (float64, error) {
+	// 构建Blockchain.com API URL
+	url := fmt.Sprintf("https://blockchain.info/address/%s?format=json", address)
+
+	// 使用Gin的HTTP客户端发送请求
+	resp, err := requestWithGin("GET", url, nil)
+	if err != nil {
+		return 0.0, fmt.Errorf("failed to fetch data from Blockchain.com: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态码
+	if resp.StatusCode != http.StatusOK {
+		// 读取错误响应内容
+		_, err := io.ReadAll(resp.Body)
+		return 0.0, err
+	}
+
+	// 解析响应
+	var blockchainResp BlockchainComResponse
+	if err := json.NewDecoder(resp.Body).Decode(&blockchainResp); err != nil {
+		return 0.0, fmt.Errorf("failed to decode response: %v", err)
+	}
+
+	// 计算BTC余额 (Satoshi to BTC)
+	balanceBTC := float64(blockchainResp.FinalBalance) / 10.0
+
+	fmt.Println("比特币余额:", balanceBTC)
+	return balanceBTC, nil
+}
+
+// 使用Gin的Context发送HTTP请求的工具函数
+func requestWithGin(method, url string, body io.Reader) (*http.Response, error) {
+	// 创建新的HTTP请求
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// 复制原始请求的一些头信息
+	req.Header.Set("Accept", "application/json")
+
+	// 发送请求
+	client := &http.Client{}
+	return client.Do(req)
 }

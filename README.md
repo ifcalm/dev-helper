@@ -21,3 +21,4 @@
 - brew services start redis        #启动redis服务
 - brew services stop redis         #关闭redis服务
 - brew services restart redis      #重启redis服务
+
